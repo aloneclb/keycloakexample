@@ -1,3 +1,4 @@
+using KeycloakExample.Endpoints;
 using KeycloakExample.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,18 +19,6 @@ app.UseSwaggerUI();
 // for singleton service
 // OptionsManager.Initialize(builder.Configuration);
 
-app.MapGet("get-admin -token", async (KeycloakService service, CancellationToken ct) =>
-{
-    var result = await service.GetAccessToken(ct);
-    if (result.isSuccess)
-    {
-        return Results.Ok(new
-        {
-            AccessToken = result.message,
-        });
-    }
-
-    return Results.BadRequest(new { Error = result.message });
-});
+app.MapAuthEndpoints();
 
 app.Run();
