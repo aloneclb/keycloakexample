@@ -9,3 +9,9 @@ public sealed record RegisterDto
     public string? Password { get; set; }
     public string? ImageUrl { get; set; }
 }
+
+public sealed record LoginDto
+{
+    public string? Username { get; set; }
+    public string? Password { get; set; }
+}

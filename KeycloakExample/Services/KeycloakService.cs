@@ -1,8 +1,6 @@
 ﻿using KeycloakExample.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace KeycloakExample.Services;
 
@@ -21,7 +19,6 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
              new("client_id", IdentityServer.ClientName),
              new("client_secret", IdentityServer.ClientSecret)
         };
-
 
         //var grantType = new KeyValuePair<string, string>("grant_type", "client_credentials");
         //var clientId = new KeyValuePair<string, string>("client_id", IdentityServer.ClientName);
@@ -101,39 +98,44 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
 
         return (true, "User başarılı bir şekilde oluşturuldu");
     }
+
+    public async Task<(bool isSuccess, string? message)> LoginAsync(LoginDto request, CancellationToken ct)
+    {
+        HttpClient client = new HttpClient();
+        var endpoint = $"{IdentityServer.HostName}/realms/{IdentityServer.RealmName}/protocol/openid-connect/token";
+
+        List<KeyValuePair<string, string>> data = new()
+        {
+             new("grant_type", "password"),
+             new("client_id", IdentityServer.ClientName),
+             new("client_secret", IdentityServer.ClientSecret),
+             new("username", request.Username!),
+             new("password", request.Password!)
+        };
+
+        var message = await client.PostAsync(endpoint, new FormUrlEncodedContent(data), ct);
+        var response = await message.Content.ReadAsStringAsync();
+
+        if (!message.IsSuccessStatusCode)
+        {
+            if (message.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var badResponse = JsonSerializer.Deserialize<KeyCloakDto.BadRequestResponse>(response);
+                return (false, badResponse?.ErrorDescription);
+            }
+
+            var errorResponse = JsonSerializer.Deserialize<KeyCloakDto.ErrorResponse>(response);
+            return (false, errorResponse?.ErrorDescription);
+        }
+
+        var result = JsonSerializer.Deserialize<KeyCloakDto.TokenResponse>(response);
+        if (result?.Token is null)
+        {
+            return (false, "Parse edilemedi");
+        }
+
+        return (true, result?.Token);
+    }
+
+
 }
-
-
-#region Dto's
-
-public class KeyCloakDto
-{
-    public class TokenResponse
-    {
-        [JsonPropertyName("access_token")]
-        public string? Token { get; set; }
-        [JsonPropertyName("token_type")]
-        public string? Type { get; set; }
-    }
-
-    public class ErrorResponse
-    {
-        [JsonPropertyName("error")]
-        public string? Error { get; set; }
-
-        [JsonPropertyName("error_description")]
-        public string? ErrorDescription { get; set; }
-    }
-
-    public class BadRequestResponse
-    {
-        [JsonPropertyName("error")]
-        public string? Error { get; set; }
-
-        [JsonPropertyName("errorMessage")]
-        public string? ErrorDescription { get; set; }
-    }
-}
-
-
-#endregion

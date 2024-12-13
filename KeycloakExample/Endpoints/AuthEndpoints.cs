@@ -26,7 +26,6 @@ public static class AuthEndpoints
             return Results.BadRequest(new { Error = result.message });
         }).WithSummary("Admin login");
 
-
         group.MapPost("register", async ([FromBody] RegisterDto input, KeycloakService service, CancellationToken ct) =>
         {
             var result = await service.RegisterAsync(input, ct);
@@ -37,6 +36,20 @@ public static class AuthEndpoints
 
             return Results.BadRequest(new { Error = result.message });
         }).WithSummary("User Register");
+
+        group.MapPost("login", async ([FromBody] LoginDto input, KeycloakService service, CancellationToken ct) =>
+        {
+            var result = await service.LoginAsync(input, ct);
+            if (result.isSuccess)
+            {
+                return Results.Ok(new
+                {
+                    AccessToken = result.message,
+                });
+            }
+
+            return Results.BadRequest(new { Error = result.message });
+        }).WithSummary("User Login");
 
         return routeBuilder;
     }
