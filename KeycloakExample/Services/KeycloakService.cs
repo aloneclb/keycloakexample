@@ -167,7 +167,7 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
         return (true, users);
     }
 
-    public async Task<(bool isSuccess, KeyCloakDto.UserDto? user)> GetUserByEmail(string email, CancellationToken ct)
+    public async Task<(bool isSuccess, List<KeyCloakDto.UserDto>? user)> GetUserByEmail(string email, CancellationToken ct)
     {
         var tokenResponse = await GetAccessTokenAsync(ct);
         if (!tokenResponse.isSuccess)
@@ -193,11 +193,11 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
             return (false, null);
         }
 
-        KeyCloakDto.UserDto? user = JsonSerializer.Deserialize<KeyCloakDto.UserDto>(response);
+        List<KeyCloakDto.UserDto>? user = JsonSerializer.Deserialize<List<KeyCloakDto.UserDto>?>(response);
         return (true, user);
     }
 
-    public async Task<(bool isSuccess, KeyCloakDto.UserDto? user)> GetUserByUsername(string username, CancellationToken ct)
+    public async Task<(bool isSuccess, List<KeyCloakDto.UserDto>? user)> GetUserByUsername(string username, CancellationToken ct)
     {
         var tokenResponse = await GetAccessTokenAsync(ct);
         if (!tokenResponse.isSuccess)
@@ -206,6 +206,36 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
         }
 
         var endpoint = $"{IdentityServer.HostName}/admin/realms/{IdentityServer.RealmName}/users?username={username}";
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResponse.message}");
+        var message = await client.GetAsync(endpoint, ct);
+        var response = await message.Content.ReadAsStringAsync();
+
+        if (!message.IsSuccessStatusCode)
+        {
+            if (message.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var badResponse = JsonSerializer.Deserialize<KeyCloakDto.BadRequestResponse>(response);
+                return (false, null);
+            }
+
+            var errorResponse = JsonSerializer.Deserialize<KeyCloakDto.ErrorResponse>(response);
+            return (false, null);
+        }
+
+        List<KeyCloakDto.UserDto>? user = JsonSerializer.Deserialize<List<KeyCloakDto.UserDto>>(response);
+        return (true, user);
+    }
+
+    public async Task<(bool isSuccess, KeyCloakDto.UserDto? user)> GetUserById(Guid id, CancellationToken ct)
+    {
+        var tokenResponse = await GetAccessTokenAsync(ct);
+        if (!tokenResponse.isSuccess)
+        {
+            return (false, null);
+        }
+
+        var endpoint = $"{IdentityServer.HostName}/admin/realms/{IdentityServer.RealmName}/users/{id}";
         HttpClient client = new HttpClient();
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResponse.message}");
         var message = await client.GetAsync(endpoint, ct);

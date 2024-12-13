@@ -28,6 +28,12 @@ public static class UserEndpoints
             return Results.Ok(users);
         }).WithSummary("Email'e göre kullanıcı ara.");
 
+        group.MapGet("/get-by-id", async (Guid id, KeycloakService service, CancellationToken ct) =>
+        {
+            (_, var user) = await service.GetUserById(id, ct);
+            return Results.Ok(user);
+        }).WithSummary("Id'ye göre kullanıcı ara.");
+
         return routeBuilder;
     }
 }
