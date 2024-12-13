@@ -137,5 +137,34 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
         return (true, result?.Token);
     }
 
+    public async Task<(bool isSuccess, List<KeyCloakDto.UserDto>? users)> GetAllUsersAsync(CancellationToken ct)
+    {
+        var tokenResponse = await GetAccessTokenAsync(ct);
+        if (!tokenResponse.isSuccess)
+        {
+            return (false, null);
+        }
 
+        var endpoint = $"{IdentityServer.HostName}/admin/realms/{IdentityServer.RealmName}/users";
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResponse.message}");
+        var message = await client.GetAsync(endpoint, ct);
+        var response = await message.Content.ReadAsStringAsync();
+
+        if (!message.IsSuccessStatusCode)
+        {
+            if (message.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var badResponse = JsonSerializer.Deserialize<KeyCloakDto.BadRequestResponse>(response);
+                return (false, null);
+            }
+
+            var errorResponse = JsonSerializer.Deserialize<KeyCloakDto.ErrorResponse>(response);
+            return (false, null);
+        }
+
+        List<KeyCloakDto.UserDto>? users = JsonSerializer.Deserialize<List<KeyCloakDto.UserDto>>(response);
+        return (true, users);
+
+    }
 }

@@ -33,12 +33,46 @@ public sealed class KeycloakClient : BaseHttpClient
 }
 
 
-
-
 #region Dto's
 
 public class KeyCloakDto
 {
+    public class UserDto
+    {
+        [JsonPropertyName("id")]
+        public Guid Id { get; set; }
+
+        [JsonPropertyName("username")]
+        public string Username { get; set; } = null!;
+       
+        [JsonPropertyName("firstName")]
+        public string? FirstName { get; set; }
+      
+        [JsonPropertyName("lastName")]
+        public string? LastName { get; set; }
+       
+        [JsonPropertyName("email")]
+        public string Email { get; set; } = null!;
+      
+        [JsonPropertyName("emailVerified")]
+        public bool EmailVerified { get; set; }
+        
+        [JsonPropertyName("createdTimestamp")]
+        public long CreatedTimeStamp { get; set; }
+        
+        [JsonPropertyName("enabled")]
+        public bool Enabled { get; set; }
+        
+        [JsonPropertyName("attributes")]
+        public Attribute Attributes { get; set; } = new();
+
+        public class Attribute
+        {
+            public List<string>? ImageUrl { get; set; }
+        }
+    }
+
+
     public class TokenResponse
     {
         [JsonPropertyName("access_token")]
