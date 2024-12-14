@@ -308,4 +308,25 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
 
         return await GetUserByIdAsync(id, ct);
     }
+
+    public async Task<bool> DeleteUserAsync(Guid id, CancellationToken ct)
+    {
+        var tokenResponse = await GetAccessTokenAsync(ct);
+        if (!tokenResponse.isSuccess)
+        {
+            return false;
+        }
+
+        var endpoint = $"{IdentityServer.HostName}/admin/realms/{IdentityServer.RealmName}/users/{id}";
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResponse.message}");
+        var message = await client.DeleteAsync(endpoint, ct);
+
+        if (!message.IsSuccessStatusCode)
+        {
+            return false;
+        }
+
+        return true;
+    }
 }

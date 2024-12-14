@@ -42,6 +42,12 @@ public static class UserEndpoints
             return Results.Ok(user);
         });
 
+        group.MapDelete("/delete/{id:guid:required}", async ([FromRoute] Guid id, [FromServices] KeycloakService service, CancellationToken ct) =>
+        {
+            var success = await service.DeleteUserAsync(id, ct);
+            return Results.Ok();
+        });
+
         return routeBuilder;
     }
 }

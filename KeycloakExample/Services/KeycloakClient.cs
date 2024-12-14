@@ -2,7 +2,7 @@
 
 namespace KeycloakExample.Services;
 
-// todo: sonrasında buraya taşı.
+// todo: KeycloakService içerisindeki http isteklerini bu client'e taşı
 public sealed class KeycloakClient : BaseHttpClient
 {
     protected override Task AttachTokenToRequestAsync(HttpRequestMessage request, CancellationToken stoppingToken = default)
