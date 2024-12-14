@@ -6,3 +6,9 @@ public record UserUpdateRequest
     public string? LastName { get; set; }
     public string? ImageUrl { get; set; }
 }
+
+
+public record PasswordUpdateRequest
+{
+    public string? Password { get; set; }
+}

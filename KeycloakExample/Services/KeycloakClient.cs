@@ -44,25 +44,25 @@ public class KeyCloakDto
 
         [JsonPropertyName("username")]
         public string Username { get; set; } = null!;
-       
+
         [JsonPropertyName("firstName")]
         public string? FirstName { get; set; }
-      
+
         [JsonPropertyName("lastName")]
         public string? LastName { get; set; }
-       
+
         [JsonPropertyName("email")]
         public string Email { get; set; } = null!;
-      
+
         [JsonPropertyName("emailVerified")]
         public bool EmailVerified { get; set; }
-        
+
         [JsonPropertyName("createdTimestamp")]
         public long CreatedTimeStamp { get; set; }
-        
+
         [JsonPropertyName("enabled")]
         public bool Enabled { get; set; }
-        
+
         [JsonPropertyName("attributes")]
         public Attribute Attributes { get; set; } = new();
 
@@ -70,6 +70,27 @@ public class KeyCloakDto
         {
             public List<string>? ImageUrl { get; set; }
         }
+    }
+
+    public class RoleDto
+    {
+        [JsonPropertyName("id")]
+        public Guid Id { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = null!;
+
+        [JsonPropertyName("description")]
+        public string? Description { get; set; }
+
+        [JsonPropertyName("composite")]
+        public bool Composite { get; set; }
+
+        [JsonPropertyName("clientRole")]
+        public bool IsClientRole { get; set; }
+
+        [JsonPropertyName("containerId")]
+        public Guid ContainerId { get; set; }
     }
 
 

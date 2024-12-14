@@ -40,14 +40,20 @@ public static class UserEndpoints
         {
             (_, var user) = await service.UpdateUserAsync(id, input, ct);
             return Results.Ok(user);
-        });
+        }).WithSummary("Kullanıcının bilgilerini güncelle.");
 
         group.MapDelete("/delete/{id:guid:required}", async ([FromRoute] Guid id, [FromServices] KeycloakService service, CancellationToken ct) =>
         {
             var success = await service.DeleteUserAsync(id, ct);
             return Results.Ok();
-        });
+        }).WithSummary("Kullanıcıyı sil.");
 
+
+        group.MapPut("/update/{id:guid:required}/password", async ([FromRoute] Guid id, [FromBody] PasswordUpdateRequest input, [FromServices] KeycloakService service, CancellationToken ct) =>
+        {
+            var success = await service.ResetPasswordAsync(id, input.Password!, ct);
+            return Results.Ok();
+        }).WithSummary("Kullanıcının şifresini sıfırla.");
         return routeBuilder;
     }
 }
