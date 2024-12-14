@@ -66,12 +66,10 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
                     value = request.Password
                 }
             },
-            attributes = new List<object>() // özel attribute'lar
+            attributes = new
             {
-                new {
-                    ImageUrl = request.ImageUrl,
-                    deneme = ".net client tarafından oluşturuldu"
-                }
+                ImageUrl = request.ImageUrl,
+                deneme = ".net client tarafından oluşturuldu"
             }
         };
 
@@ -227,7 +225,7 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
         return (true, user);
     }
 
-    public async Task<(bool isSuccess, KeyCloakDto.UserDto? user)> GetUserById(Guid id, CancellationToken ct)
+    public async Task<(bool isSuccess, KeyCloakDto.UserDto? user)> GetUserByIdAsync(Guid id, CancellationToken ct)
     {
         var tokenResponse = await GetAccessTokenAsync(ct);
         if (!tokenResponse.isSuccess)
@@ -255,5 +253,59 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
 
         KeyCloakDto.UserDto? user = JsonSerializer.Deserialize<KeyCloakDto.UserDto>(response);
         return (true, user);
+    }
+
+    public async Task<(bool isSuccess, KeyCloakDto.UserDto? user)> UpdateUserAsync(Guid id, UserUpdateRequest input, CancellationToken ct)
+    {
+        var tokenResponse = await GetAccessTokenAsync(ct);
+        if (!tokenResponse.isSuccess)
+        {
+            return (false, null);
+        }
+
+        // !!!!! Önemli not diğer tüm bilgileri null basıyor ?
+        object data = new
+        {
+            firstName = input.FirstName,
+            lastName = input.LastName,
+            //credentials = new object[1] // şifre değiştirmek istersen
+            //{
+            //    new {
+            //        type = "password",
+            //        temporary = false,
+            //        value = "request.Password"
+            //    }
+            //},
+            attributes = new
+            {
+                ImageUrl = input.ImageUrl
+                //deneme = ".net client tarafından oluşturuldu"  // diğer attribute'ları verebilirsin
+            }
+        };
+
+        var endpoint = $"{IdentityServer.HostName}/admin/realms/{IdentityServer.RealmName}/users/{id}";
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResponse.message}");
+
+        var stringData = JsonSerializer.Serialize(data);
+        var content = new StringContent(stringData, encoding: Encoding.UTF8, mediaType: "application/json");
+
+        var message = await client.PutAsync(endpoint, content, ct);
+        if (!message.IsSuccessStatusCode)
+        {
+            var response = await message.Content.ReadAsStringAsync();
+            if (message.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var badResponse = JsonSerializer.Deserialize<KeyCloakDto.BadRequestResponse>(response);
+                Console.WriteLine(badResponse);
+                return (false, null);
+            }
+
+            var errorResponse = JsonSerializer.Deserialize<KeyCloakDto.ErrorResponse>(response);
+            Console.WriteLine(errorResponse);
+            return (false, null);
+        }
+
+        return await GetUserByIdAsync(id, ct);
     }
 }

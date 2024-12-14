@@ -1,4 +1,6 @@
-﻿using KeycloakExample.Services;
+﻿using KeycloakExample.Models;
+using KeycloakExample.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace KeycloakExample.Endpoints;
 
@@ -28,11 +30,17 @@ public static class UserEndpoints
             return Results.Ok(users);
         }).WithSummary("Email'e göre kullanıcı ara.");
 
-        group.MapGet("/get-by-id", async (Guid id, KeycloakService service, CancellationToken ct) =>
+        group.MapGet("/get-by-id/{id:guid:required}", async ([FromRoute] Guid id, [FromServices] KeycloakService service, CancellationToken ct) =>
         {
-            (_, var user) = await service.GetUserById(id, ct);
+            (_, var user) = await service.GetUserByIdAsync(id, ct);
             return Results.Ok(user);
         }).WithSummary("Id'ye göre kullanıcı ara.");
+
+        group.MapPut("/update/{id:guid:required}", async ([FromRoute] Guid id, [FromBody] UserUpdateRequest input, [FromServices] KeycloakService service, CancellationToken ct) =>
+        {
+            (_, var user) = await service.UpdateUserAsync(id, input, ct);
+            return Results.Ok(user);
+        });
 
         return routeBuilder;
     }
