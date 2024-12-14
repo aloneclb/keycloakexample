@@ -391,4 +391,102 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
         List<KeyCloakDto.RoleDto>? roles = JsonSerializer.Deserialize<List<KeyCloakDto.RoleDto>>(response);
         return (true, roles);
     }
+
+    public async Task<(bool isSuccess, KeyCloakDto.RoleDto? role)> GetClientRoleByName(string roleName, CancellationToken ct)
+    {
+        var tokenResponse = await GetAccessTokenAsync(ct);
+        if (!tokenResponse.isSuccess)
+        {
+            return (false, null);
+        }
+
+        // first ve max deyimleri ile pagination yapısı buradada mevcut
+        var endpoint = $"{IdentityServer.HostName}/admin/realms/{IdentityServer.RealmName}/clients/{IdentityServer.ClientUUID}/roles/{roleName}";
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResponse.message}");
+        var message = await client.GetAsync(endpoint, ct);
+        var response = await message.Content.ReadAsStringAsync();
+
+        if (!message.IsSuccessStatusCode)
+        {
+            if (message.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var badResponse = JsonSerializer.Deserialize<KeyCloakDto.BadRequestResponse>(response);
+                return (false, null);
+            }
+
+            var errorResponse = JsonSerializer.Deserialize<KeyCloakDto.ErrorResponse>(response);
+            return (false, null);
+        }
+
+        KeyCloakDto.RoleDto? roles = JsonSerializer.Deserialize<KeyCloakDto.RoleDto>(response);
+        return (true, roles);
+    }
+
+    public async Task<(bool isSuccess, string? message)> CreateClientRoleAsync(CreateRoleDto request, CancellationToken ct)
+    {
+        var tokenResponse = await GetAccessTokenAsync(ct);
+        if (!tokenResponse.isSuccess)
+        {
+            return (false, tokenResponse.message);
+        }
+
+        object data = new
+        {
+            name = request.Name,
+            description = request.Description,
+        };
+
+        var endpoint = $"{IdentityServer.HostName}/admin/realms/{IdentityServer.RealmName}/clients/{IdentityServer.ClientUUID}/roles";
+        var stringData = JsonSerializer.Serialize(data);
+        var content = new StringContent(stringData, encoding: Encoding.UTF8, mediaType: "application/json");
+
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResponse.message}");
+        var message = await client.PostAsync(endpoint, content, ct);
+
+        if (!message.IsSuccessStatusCode)
+        {
+            var response = await message.Content.ReadAsStringAsync();
+            if (message.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var badResponse = JsonSerializer.Deserialize<KeyCloakDto.BadRequestResponse>(response);
+                return (false, badResponse?.ErrorDescription);
+            }
+
+            var errorResponse = JsonSerializer.Deserialize<KeyCloakDto.ErrorResponse>(response);
+            return (false, errorResponse?.ErrorDescription);
+        }
+
+        return (true, "Client role başarılı bir şekilde oluşturuldu");
+    }
+
+    public async Task<bool> DeleteClientRoleByNameAsync(string roleName, CancellationToken ct)
+    {
+        var tokenResponse = await GetAccessTokenAsync(ct);
+        if (!tokenResponse.isSuccess)
+        {
+            return false;
+        }
+
+        var endpoint = $"{IdentityServer.HostName}/admin/realms/{IdentityServer.RealmName}/clients/{IdentityServer.ClientUUID}/roles/{roleName}";
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResponse.message}");
+        var message = await client.DeleteAsync(endpoint, ct);
+
+        if (!message.IsSuccessStatusCode)
+        {
+            var response = await message.Content.ReadAsStringAsync();
+            if (message.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var badResponse = JsonSerializer.Deserialize<KeyCloakDto.BadRequestResponse>(response);
+                return false;
+            }
+
+            var errorResponse = JsonSerializer.Deserialize<KeyCloakDto.ErrorResponse>(response);
+            return false;
+        }
+
+        return true;
+    }
 }
