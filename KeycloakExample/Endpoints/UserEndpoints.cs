@@ -1,15 +1,21 @@
-﻿using KeycloakExample.Models;
+﻿using KeycloakExample.Filters;
+using KeycloakExample.Models;
 using KeycloakExample.Services;
 using Microsoft.AspNetCore.Mvc;
 
+//using Microsoft.AspNetCore.Authorization;
+
 namespace KeycloakExample.Endpoints;
 
+//[Authorize(Roles = "")] minimal api değil ise bu şekilde kullanılabilir.
 public static class UserEndpoints
 {
     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder routeBuilder)
     {
         var group = routeBuilder.MapGroup("/users")
-            .RequireAuthorization("users")
+            .RequireAuthorization()
+            //.RequireAuthorization("users") // istersem group'a policy atayabilirim. Program.cs'de tanımladığım
+            //.AddEndpointFilter(new RolesFilter("DeleteUser", "UpdateUser"));
             .WithTags("User API's");
 
         group.MapGet("/get-all", async (KeycloakService service, CancellationToken ct) =>
@@ -17,7 +23,7 @@ public static class UserEndpoints
             (_, var users) = await service.GetAllUsersAsync(ct);
             return Results.Ok(users);
         })
-            //.RequireAuthorization("") burası tekilde set edilebilir.
+            .RequireAuthorization("users")
             .WithSummary("Tüm user'ları verir.");
 
         group.MapGet("/get-by-username", async (string username, KeycloakService service, CancellationToken ct) =>
@@ -30,7 +36,9 @@ public static class UserEndpoints
         {
             (_, var users) = await service.GetUserByEmail(email, ct);
             return Results.Ok(users);
-        }).WithSummary("Email'e göre kullanıcı ara.");
+        })
+            .AddEndpointFilter(new RolesFilter("FindByEmailRole")) // ! endpoint filter example.
+            .WithSummary("Email'e göre kullanıcı ara.");
 
         group.MapGet("/get-by-id/{id:guid:required}", async ([FromRoute] Guid id, [FromServices] KeycloakService service, CancellationToken ct) =>
         {
@@ -48,7 +56,9 @@ public static class UserEndpoints
         {
             var success = await service.DeleteUserAsync(id, ct);
             return Results.Ok();
-        }).WithSummary("Kullanıcıyı sil.");
+        })
+            .RequireAuthorization("DeleteUser")
+            .WithSummary("Kullanıcıyı sil.");
 
         group.MapPut("/update/{id:guid:required}/password", async ([FromRoute] Guid id, [FromBody] PasswordUpdateRequest input, [FromServices] KeycloakService service, CancellationToken ct) =>
         {

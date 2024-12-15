@@ -46,10 +46,10 @@ builder.Services.AddAuthorization(options =>
     });
 
     // birden fazla ekleyebiliriz.
-    //options.AddPolicy("users", builder =>
+    //options.AddPolicy("users-policy-2", builder =>
     //{
-    //    //builder.RequireRealmRoles() eðer realm role kullanýrsak.
-    //    builder.RequireResourceRoles("UserGetAll", "UserCreate", "UserUpdate", "UserDelete"); // biz client role kullanýyoruz.
+    //    //builder.RequireRealmRoles() eðer realm role kullanmak istersek.
+    //    builder.RequireResourceRoles("UserGetAll", "UserCreate"); // biz client role kullanýyoruz.
     //});
 }).AddKeycloakAuthorization(builder.Configuration);
 

@@ -22,6 +22,8 @@ public sealed class OptionsManager
     {
         return _identityOptions;
     }
+
+    public string GetClientName => _identityOptions.ClientName;
 }
 
 public class IdentityServerOption
@@ -33,8 +35,6 @@ public class IdentityServerOption
     public string ClientUUID { get; set; } = null!;
 }
 
-
-
 //public sealed class OptionsManager
 //{
 //    private static IConfiguration? _configuration;
@@ -45,7 +45,6 @@ public class IdentityServerOption
 //    private OptionsManager() { }
 //    private static readonly Lazy<OptionsManager> _instance = new Lazy<OptionsManager>(() => new OptionsManager());
 //    public static OptionsManager Instance => _instance.Value;
-
 
 //    public static void Initialize(IConfiguration configuration)
 //    {
