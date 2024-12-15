@@ -558,4 +558,28 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
 
         return true;
     }
+
+    public async Task<List<KeyCloakDto.RoleDto>?> GetAllUserRolesAsync(Guid userId, CancellationToken ct)
+    {
+        var tokenResponse = await GetAccessTokenAsync(ct);
+        if (!tokenResponse.isSuccess)
+        {
+            return null;
+        }
+
+        var endpoint = $"{IdentityServer.HostName}/admin/realms/{IdentityServer.RealmName}/users/{userId}/role-mappings/clients/{IdentityServer.ClientUUID}/";
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResponse.message}");
+        var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+        var message = await client.SendAsync(request, ct);
+
+        if (!message.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        var response = await message.Content.ReadAsStringAsync();
+        List<KeyCloakDto.RoleDto>? roles = JsonSerializer.Deserialize<List<KeyCloakDto.RoleDto>>(response);
+        return roles;
+    }
 }

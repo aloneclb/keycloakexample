@@ -9,14 +9,16 @@ public static class UserEndpoints
     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder routeBuilder)
     {
         var group = routeBuilder.MapGroup("/users")
-            .RequireAuthorization()
+            .RequireAuthorization("users")
             .WithTags("User API's");
 
         group.MapGet("/get-all", async (KeycloakService service, CancellationToken ct) =>
         {
             (_, var users) = await service.GetAllUsersAsync(ct);
             return Results.Ok(users);
-        }).WithSummary("Tüm user'ları verir.");
+        })
+            //.RequireAuthorization("") burası tekilde set edilebilir.
+            .WithSummary("Tüm user'ları verir.");
 
         group.MapGet("/get-by-username", async (string username, KeycloakService service, CancellationToken ct) =>
         {
@@ -47,7 +49,6 @@ public static class UserEndpoints
             var success = await service.DeleteUserAsync(id, ct);
             return Results.Ok();
         }).WithSummary("Kullanıcıyı sil.");
-
 
         group.MapPut("/update/{id:guid:required}/password", async ([FromRoute] Guid id, [FromBody] PasswordUpdateRequest input, [FromServices] KeycloakService service, CancellationToken ct) =>
         {

@@ -1,4 +1,5 @@
 using Keycloak.AuthServices.Authentication;
+using Keycloak.AuthServices.Authorization;
 using KeycloakExample.Endpoints;
 using KeycloakExample.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,7 +28,6 @@ builder.Services.AddSwaggerGen(setup =>
     setup.AddSecurityRequirement(new OpenApiSecurityRequirement { { jwtSecuritySchema, Array.Empty<string>() } });
 });
 
-
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSingleton<OptionsManager>();
@@ -36,7 +36,22 @@ builder.Services.AddSingleton<OptionsManager>();
 builder.Services.AddScoped<KeycloakService>();
 
 builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("users", builder =>
+    {
+        //builder.RequireRealmRoles() eðer realm role kullanýrsak.
+        builder.RequireResourceRoles("UserGetAll", "UserCreate", "UserUpdate", "UserDelete"); // biz client role kullanýyoruz.
+        // gelen user users policy ile iþaretlenen endpoint'te bu izinlerden birini alsa yeterli.
+    });
+
+    // birden fazla ekleyebiliriz.
+    //options.AddPolicy("users", builder =>
+    //{
+    //    //builder.RequireRealmRoles() eðer realm role kullanýrsak.
+    //    builder.RequireResourceRoles("UserGetAll", "UserCreate", "UserUpdate", "UserDelete"); // biz client role kullanýyoruz.
+    //});
+}).AddKeycloakAuthorization(builder.Configuration);
 
 var app = builder.Build();
 
