@@ -22,6 +22,16 @@ public static class UserRoleEndpoints
             return isSuccess ? Results.Ok() : Results.BadRequest();
         });
 
+        group.MapDelete("unassign/{userId:guid:required}", async ([FromRoute] Guid userId, [FromBody] AssignRoleDto input, [FromServices] KeycloakService service, CancellationToken ct) =>
+        {
+            var isSuccess = await service.UnAssignRoleToUserAsync(input with
+            {
+                UserId = userId,
+            }, ct);
+
+            return isSuccess ? Results.Ok() : Results.BadRequest();
+        });
+
         return routeBuilder;
     }
 }
