@@ -1,6 +1,6 @@
 ﻿namespace KeycloakExample.Models;
 
-public record UserUpdateRequest
+public sealed record UserUpdateRequest
 {
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
@@ -8,7 +8,7 @@ public record UserUpdateRequest
 }
 
 
-public record PasswordUpdateRequest
+public sealed record PasswordUpdateRequest
 {
     public string? Password { get; set; }
 }

@@ -489,4 +489,37 @@ public class KeycloakService(OptionsManager options) // , IOptions<IdentityServe
 
         return true;
     }
+
+    public async Task<bool> AssignRoleToUserAsync(AssignRoleDto input, CancellationToken ct)
+    {
+        var tokenResponse = await GetAccessTokenAsync(ct);
+        if (!tokenResponse.isSuccess)
+        {
+            return false;
+        }
+
+        var data = new List<object>();
+        foreach (var role in input.Roles)
+        {
+            data.Add(new
+            {
+                id = role.Id,
+                name = role.Name
+            });
+        }
+
+        var endpoint = $"{IdentityServer.HostName}/admin/realms/{IdentityServer.RealmName}/users/{input.UserId}/role-mappings/clients/{IdentityServer.ClientUUID}/";
+        var stringData = JsonSerializer.Serialize(data);
+        var content = new StringContent(stringData, encoding: Encoding.UTF8, mediaType: "application/json");
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResponse.message}");
+        var message = await client.PostAsync(endpoint, content, ct);
+
+        if (!message.IsSuccessStatusCode)
+        {
+            return false;
+        }
+
+        return true;
+    }
 }
