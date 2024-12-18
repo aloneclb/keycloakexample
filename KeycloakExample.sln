@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35521.163 d17.12
+VisualStudioVersion = 17.12.35521.163
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeycloakExample", "KeycloakExample\KeycloakExample.csproj", "{3ECF9629-4BB0-42F3-BC52-6F4E5DB5B855}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeycloakExampleMVC", "KeycloakExampleMVC\KeycloakExampleMVC.csproj", "{1F59AA98-C38D-4320-879F-F3B7ABBC89DB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{3ECF9629-4BB0-42F3-BC52-6F4E5DB5B855}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3ECF9629-4BB0-42F3-BC52-6F4E5DB5B855}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3ECF9629-4BB0-42F3-BC52-6F4E5DB5B855}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F59AA98-C38D-4320-879F-F3B7ABBC89DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F59AA98-C38D-4320-879F-F3B7ABBC89DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F59AA98-C38D-4320-879F-F3B7ABBC89DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F59AA98-C38D-4320-879F-F3B7ABBC89DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
