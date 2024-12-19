@@ -1,28 +1,73 @@
 using Keycloak.AuthServices.Authorization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Keycloak authentication
-// Keycloak authentication
+// Keycloak authentication MVC için cookie li
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
 })
-.AddCookie()
+.AddCookie(options =>
+{
+    options.Events = new CookieAuthenticationEvents
+    {
+        // cookie authenticationda 
+        // eðer duruma gelen dataya vs. göre ekstra claimler eklemek istersek
+        OnSigningIn = context =>
+        {
+            var principal = context.Principal;
+            var identity = (System.Security.Claims.ClaimsIdentity)principal.Identity;
+
+            // client-roles verildi custom mapper adýna ondan burada gelicek.
+            var roles = identity.FindAll("client-roles").ToList();
+            //if (roles.Any())
+            //{
+            //    foreach (var role in roles)
+            //    {
+            //        identity.AddClaim(new System.Security.Claims.Claim("roles", role.Value));
+            //    }
+            //}
+
+            return Task.CompletedTask;
+        }
+    };
+})
 .AddOpenIdConnect(options =>
 {
-    options.Authority = "http://localhost:8080/realms/example_realm"; // Keycloak realm URL'si
-    options.ClientId = "mvc_with_web_login_client"; // Keycloak client ID
-    options.ClientSecret = "JFnToPErLDIsnF61jXN3VN9jVe7R4mwY"; // Keycloak client secret
+    options.Authority = "http://localhost:8080/realms/example_realm"; // realm URL'si
+    options.ClientId = "mvc_with_web_login_client"; // client ID
+    options.ClientSecret = "JFnToPErLDIsnF61jXN3VN9jVe7R4mwY"; // client secret
     options.ResponseType = "code";
-    options.SaveTokens = true; // ID token ve access token'ý saklamak
+    options.SaveTokens = true; // id token ve access tokený saklamak
+    options.RequireHttpsMetadata = false; // ssl kullanmak
+
+    // claimlere eklenilmek istenilen scope'larý gir
     options.Scope.Add("openid");
     options.Scope.Add("profile");
     options.Scope.Add("email");
-    options.RequireHttpsMetadata = false; // Geliþtirme ortamýnda HTTPS kullanmayabilirsiniz
+    options.Scope.Add("basic");
+    options.Scope.Add("acr");
+    options.Scope.Add("address");
+    options.Scope.Add("imageUrl");
+    options.Scope.Add("microprofile-jwt");
+    options.Scope.Add("offline_access");
+    options.Scope.Add("organization");
+
+    options.Scope.Add("client-roles"); // roller için kendi mapperim
+
+    // token kontrol
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = "http://localhost:8080/realms/example_realm",
+        ValidateAudience = true,
+        ValidAudience = "mvc_with_web_login_client"
+    };
 });
 
 // Authorization (Optional)
